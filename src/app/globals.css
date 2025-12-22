@@ -3,9 +3,26 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
 
-@theme inline {
+  /* Neo Green Color Palette */
+  --neo-green-50: #ecfdf5;
+  --neo-green-100: #d1fae5;
+  --neo-green-200: #a7f3d0;
+  --neo-green-300: #6ee7b7;
+  --neo-green-400: #34d399;
+  --neo-green-500: #10b981;
+  --neo-green-600: #059669;
+  --neo-green-700: #047857;
+  --neo-green-800: #065f46;
+  --neo-green-900: #064e3b;
+
+  /* Primary brand colors */
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-light: #34d399;
+  --primary-dark: #047857;
+
+  /* Tailwind theme overrides */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -23,4 +40,21 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Global utility classes for neo green theme */
+.bg-primary {
+  background-color: var(--primary);
+}
+
+.text-primary {
+  color: var(--primary);
+}
+
+.border-primary {
+  border-color: var(--primary);
+}
+
+.hover\:bg-primary-hover:hover {
+  background-color: var(--primary-hover);
 }

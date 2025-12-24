@@ -77,10 +77,16 @@ export async function signInWithGoogle() {
     try {
         const supabase = await createClient()
 
+        // Use production URL in production, localhost in development
+        const isProduction = process.env.NODE_ENV === 'production'
+        const baseUrl = isProduction
+            ? 'https://www.proinvoice.cloud'
+            : 'http://localhost:3000'
+
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
+                redirectTo: `${baseUrl}/auth/callback`,
             },
         })
 

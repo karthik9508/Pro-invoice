@@ -73,3 +73,31 @@ export async function signout() {
     }
 }
 
+export async function signInWithGoogle() {
+    try {
+        const supabase = await createClient()
+
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`,
+            },
+        })
+
+        if (error) {
+            return { error: error.message }
+        }
+
+        if (data.url) {
+            redirect(data.url)
+        }
+    } catch (error) {
+        console.error('Google sign-in error:', error)
+        // Check if it's a redirect (which throws in Next.js)
+        if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+            throw error
+        }
+        return { error: 'Failed to initiate Google sign-in. Please try again.' }
+    }
+}
+

@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyWebhookSignature } from '@/lib/razorpay'
-import { getSupabaseAdmin } from '@/lib/supabase/admin'
+
+// Force dynamic rendering - skip static analysis during build
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
+    // Lazy imports to prevent build-time evaluation
+    const { verifyWebhookSignature } = await import('@/lib/razorpay')
+    const { getSupabaseAdmin } = await import('@/lib/supabase/admin')
+
     const body = await request.text()
     const signature = request.headers.get('x-razorpay-signature')
 
@@ -18,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-        // Get supabase admin client at runtime (not build time)
+        // Get supabase admin client at runtime
         const supabaseAdmin = getSupabaseAdmin()
 
         const event = JSON.parse(body)

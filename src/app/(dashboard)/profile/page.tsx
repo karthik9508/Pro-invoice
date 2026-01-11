@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { BusinessProfile, InvoiceTemplate } from '@/types'
+import type { BusinessProfile, InvoiceTemplate, SubscriptionPlan } from '@/types'
+import { SubscriptionBadge } from '@/components/SubscriptionBadge'
+import { UpgradeButton } from '@/components/UpgradeButton'
 import {
     Building2,
     Save,
@@ -12,14 +14,28 @@ import {
     MapPin,
     Globe,
     FileText,
-    Layout
+    Layout,
+    Crown,
+    CreditCard,
+    Zap,
+    Check,
+    ExternalLink
 } from 'lucide-react'
+
+interface SubscriptionData {
+    plan: SubscriptionPlan
+    invoicesToday: number
+    canCreate: boolean
+    isPro: boolean
+    limit: number
+}
 
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
 
     // Form state
     const [businessName, setBusinessName] = useState('')
@@ -35,11 +51,12 @@ export default function ProfilePage() {
     const [invoiceTemplate, setInvoiceTemplate] = useState<InvoiceTemplate>('modern')
 
     useEffect(() => {
-        async function fetchProfile() {
+        async function fetchData() {
             const supabase = createClient()
             const { data: { user } } = await supabase.auth.getUser()
 
             if (user) {
+                // Fetch profile
                 const { data: profile } = await supabase
                     .from('business_profiles')
                     .select('*')
@@ -59,12 +76,26 @@ export default function ProfilePage() {
                     setWebsite(profile.website || '')
                     setInvoiceTemplate(profile.invoice_template || 'modern')
                 }
+
+                // Fetch subscription status
+                try {
+                    const response = await fetch('/api/subscription/status')
+                    if (response.ok) {
+                        const subData = await response.json()
+                        setSubscription({
+                            ...subData,
+                            plan: subData.isPro ? 'pro' : 'free',
+                        })
+                    }
+                } catch (err) {
+                    console.error('Error fetching subscription:', err)
+                }
             }
 
             setLoading(false)
         }
 
-        fetchProfile()
+        fetchData()
     }, [])
 
     async function handleSubmit(e: React.FormEvent) {
@@ -147,6 +178,119 @@ export default function ProfilePage() {
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-slate-900">Business Profile</h1>
                 <p className="text-slate-500 mt-1">This information will appear on your invoices and statements</p>
+            </div>
+
+            {/* Subscription Section */}
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-6">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-emerald-500" />
+                    Subscription
+                </h3>
+
+                {subscription?.isPro ? (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
+                                    <Crown className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-lg text-amber-900">Pro Plan</span>
+                                        <SubscriptionBadge plan="pro" size="sm" />
+                                    </div>
+                                    <p className="text-amber-700 text-sm">Unlimited invoice creation</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4 text-center">
+                            <div className="p-3 bg-slate-50 rounded-lg">
+                                <div className="text-2xl font-bold text-slate-900">∞</div>
+                                <div className="text-xs text-slate-500">Invoices/Day</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded-lg">
+                                <div className="text-2xl font-bold text-emerald-600">
+                                    <Check className="w-6 h-6 mx-auto" />
+                                </div>
+                                <div className="text-xs text-slate-500">AI Generation</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded-lg">
+                                <div className="text-2xl font-bold text-emerald-600">
+                                    <Check className="w-6 h-6 mx-auto" />
+                                </div>
+                                <div className="text-xs text-slate-500">Priority Support</div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center">
+                                    <Zap className="w-6 h-6 text-slate-500" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-bold text-lg text-slate-900">Free Plan</span>
+                                        <SubscriptionBadge plan="free" size="sm" />
+                                    </div>
+                                    <p className="text-slate-500 text-sm">
+                                        {subscription?.invoicesToday || 0} of {subscription?.limit || 5} invoices used today
+                                    </p>
+                                </div>
+                            </div>
+                            <UpgradeButton size="sm" />
+                        </div>
+
+                        {/* Features Comparison */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 border border-slate-200 rounded-xl">
+                                <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                                    <Zap className="w-4 h-4" />
+                                    Free
+                                </h4>
+                                <ul className="space-y-2 text-sm text-slate-600">
+                                    <li className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-emerald-500" />
+                                        5 invoices per day
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-emerald-500" />
+                                        AI invoice generation
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-emerald-500" />
+                                        3 invoice templates
+                                    </li>
+                                </ul>
+                            </div>
+                            <div className="p-4 border-2 border-amber-300 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50">
+                                <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
+                                    <Crown className="w-4 h-4" />
+                                    Pro
+                                </h4>
+                                <ul className="space-y-2 text-sm text-amber-800">
+                                    <li className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-amber-600" />
+                                        <strong>Unlimited</strong> invoices
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-amber-600" />
+                                        AI invoice generation
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-amber-600" />
+                                        All templates
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <Check className="w-4 h-4 text-amber-600" />
+                                        Priority support
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {success && (

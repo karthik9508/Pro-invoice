@@ -9,7 +9,8 @@ import {
     Receipt,
     LogOut,
     Plus,
-    Building2
+    Building2,
+    Crown
 } from 'lucide-react'
 
 export default async function DashboardLayout({
@@ -72,6 +73,13 @@ export default async function DashboardLayout({
                     >
                         <Building2 className="w-5 h-5" />
                         Business Profile
+                    </Link>
+                    <Link
+                        href="/checkout"
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-amber-400 hover:bg-slate-800 hover:text-amber-300 transition"
+                    >
+                        <Crown className="w-5 h-5" />
+                        Upgrade Plan
                     </Link>
                 </nav>
 

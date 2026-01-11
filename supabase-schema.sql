@@ -195,3 +195,39 @@ DROP POLICY IF EXISTS "Users can delete their own profile" ON business_profiles;
 CREATE POLICY "Users can delete their own profile"
   ON business_profiles FOR DELETE
   USING (auth.uid() = user_id);
+
+-- ==========================================
+-- SUBSCRIPTIONS TABLE
+-- ==========================================
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  razorpay_customer_id TEXT,
+  razorpay_subscription_id TEXT,
+  plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'canceled', 'past_due')),
+  current_period_end TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_razorpay_subscription_id ON subscriptions(razorpay_subscription_id);
+
+-- Subscriptions policies
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own subscription" ON subscriptions;
+CREATE POLICY "Users can view their own subscription"
+  ON subscriptions FOR SELECT
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can create their own subscription" ON subscriptions;
+CREATE POLICY "Users can create their own subscription"
+  ON subscriptions FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update their own subscription" ON subscriptions;
+CREATE POLICY "Users can update their own subscription"
+  ON subscriptions FOR UPDATE
+  USING (auth.uid() = user_id);

@@ -2,6 +2,10 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 let supabaseAdminInstance: SupabaseClient | null = null
 
+/**
+ * Get Supabase admin client with service role key.
+ * Uses lazy initialization to prevent build-time errors.
+ */
 export function getSupabaseAdmin(): SupabaseClient {
     if (!supabaseAdminInstance) {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -20,10 +24,3 @@ export function getSupabaseAdmin(): SupabaseClient {
     }
     return supabaseAdminInstance
 }
-
-// For backward compatibility - lazy proxy
-export const supabaseAdmin = new Proxy({} as SupabaseClient, {
-    get(_, prop) {
-        return getSupabaseAdmin()[prop as keyof SupabaseClient]
-    },
-})

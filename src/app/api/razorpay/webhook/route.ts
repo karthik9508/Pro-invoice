@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyWebhookSignature } from '@/lib/razorpay'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
     const body = await request.text()
@@ -18,6 +18,9 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+        // Get supabase admin client at runtime (not build time)
+        const supabaseAdmin = getSupabaseAdmin()
+
         const event = JSON.parse(body)
         const eventType = event.event
 
